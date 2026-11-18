@@ -6,6 +6,11 @@ import { registerAppTool, registerAppResource, RESOURCE_MIME_TYPE } from "@model
 import { customEndpoint, prompt, readSettings, settingsDir } from "./communicate.mjs";
 
 const uri = "ui://communication/settings.html";
+export const panelIcons = await Promise.all(["light", "dark"].map(async theme => {
+  const path = theme === "dark" ? "../assets/cups-dark.svg" : "../assets/cups.svg";
+  const bytes = await readFile(new URL(path, import.meta.url));
+  return { src: "data:image/svg+xml;base64," + bytes.toString("base64"), mimeType: "image/svg+xml", theme };
+}));
 const providers = ["go", "deepseek", "custom"];
 const defaults = { go: "glm-5.3", deepseek: "deepseek-flash", custom: "" };
 const modelsSchema = z.object({go:z.enum(["glm-5.3","glm-5.3-flash","deepseek-v4.1-flash"]),deepseek:z.enum(["deepseek-flash","deepseek-v4-pro"]),custom:z.string().max(200)}).strict();
@@ -25,15 +30,20 @@ async function state() {
 }
 const reply = async () => ({ content:[], structuredContent:await state() });
 export function registerPanel(server) {
-  registerAppResource(server,"沟通模型面板",uri,{description:"在宿主中配置沟通模型。"}, async () => ({
+  registerAppResource(server,"传声筒",uri,{description:"在传声筒中配置工作回复模型。",icons:panelIcons}, async () => ({
     contents:[{uri,mimeType:RESOURCE_MIME_TYPE,text:await readFile(new URL("../panel/widget.html",import.meta.url),"utf8"),
-      _meta:{ui:{csp:{connectDomains:[],resourceDomains:[]}}}}],
+      _meta:{ui:{csp:{connectDomains:[],resourceDomains:[]}}, "openai/ui":{availableDisplayModes:["inline","fullscreen"]}}}],
   }));
   registerAppTool(server,"open_communication_panel",{
-    title:"沟通模型",description:"打开沟通模型设置面板。",inputSchema:{},
+    title:"传声筒",icons:panelIcons,description:"打开传声筒，选择工作回复模型。",inputSchema:{},
     annotations:{readOnlyHint:true},
     _meta:{ui:{resourceUri:uri},"openai/ui":{entrypoints:[{type:"global"},{type:"thread"}]}},
-  }, reply);
+  }, async () => {
+    const result = await reply();
+    const {enabled, provider, models} = result.structuredContent;
+    const status = enabled ? "当前沟通模型为 " + models[provider] + "。" : "外部沟通已关闭。";
+    return { ...result, content:[{type:"text",text:"传声筒 · " + status}] };
+  });
   registerAppTool(server,"get_panel_settings",{
     title:"读取沟通设置",inputSchema:{},annotations:{readOnlyHint:true},_meta:appOnly,
   }, reply);

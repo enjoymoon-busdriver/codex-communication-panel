@@ -1,4 +1,4 @@
-# Codex Communication Panel
+# 传声筒 · Codex Communication Panel
 
 让 Codex 负责规划和执行，由单独选择的模型组织面向用户的中文回复。设置界面使用 MCP Apps 组件，支持它的宿主可以在侧栏中打开，切换服务商、模型和开关，查看发送给模型的固定提示词。
 

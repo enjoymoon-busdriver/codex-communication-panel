@@ -1,10 +1,10 @@
 import { McpServer } from "@modelcontextprotocol/sdk/server/mcp.js";
-import { registerPanel } from "./sidebar.mjs";
+import { registerPanel, panelIcons } from "./sidebar.mjs";
 import { z } from "zod";
 import { communicate } from "./communicate.mjs";
 
 export function createServer() {
-  const server = new McpServer({ name: "forge-communication", version: "0.1.0" });
+  const server = new McpServer({ name: "forge-communication", title:"传声筒", icons:panelIcons, version: "0.1.0" });
   server.registerTool("compose_reply", {
     description: "为主会话拟一条面向用户的工作回复。只使用与答复有关的问题、已核实事实和待确认点。",
     inputSchema: {

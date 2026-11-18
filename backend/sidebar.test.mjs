@@ -31,11 +31,15 @@ test("local HTTP discovers both sidebar entrypoints and app-only settings; stora
   const resource=(await client.readResource({uri})).contents[0];
   assert.equal(resource.mimeType,"text/html;profile=mcp-app");
   assert.match(resource.text,/<html\b/i);
+  assert.match(resource.text,/<h1>传声筒<\/h1>/);
+  assert.deepEqual(resource._meta["openai/ui"].availableDisplayModes,["inline","fullscreen"]);
+  assert.equal(open.title,"传声筒");
   for(const name of ["get_panel_settings","set_panel_settings"]) {
     assert.deepEqual(tools.find(tool=>tool.name===name)._meta.ui.visibility,["app"]);
   }
   await writeFile(join(temp,"go-key"),"FAKE-CREDENTIAL");
   const initial=await client.callTool({name:"open_communication_panel",arguments:{}});
+  assert.match(initial.content[0].text,/传声筒/);
   assert.equal(initial.structuredContent.hasKey.go,true);
   assert.doesNotMatch(JSON.stringify(initial),/FAKE-CREDENTIAL/);
   const saved=await client.callTool({name:"set_panel_settings",arguments:{enabled:true,provider:"custom",models:{go:"glm-5.3",deepseek:"deepseek-flash",custom:"test"},customBaseUrl:"https://local.example/v1"}});

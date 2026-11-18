@@ -1,6 +1,6 @@
-import { App } from "@modelcontextprotocol/ext-apps/app-with-deps";
+import { App } from "@modelcontextprotocol/ext-apps";
 
-const app = new App({ name: "Communication model settings", version: "1.0.0" });
+const app = new App({ name: "传声筒", version: "1.0.0" }, { availableDisplayModes: ["inline", "fullscreen"] });
 const field = id => document.getElementById(id);
 const providers = ["go", "deepseek", "custom"];
 let saved;
@@ -13,7 +13,8 @@ function updateEditor() {
     for (const input of section.querySelectorAll("input,select")) input.disabled = section.hidden;
   }
   const message = saved?.hasKey?.[provider] ? "已配置密钥。" : "尚未配置密钥。";
-  field("key").textContent = message + " 本地设置命令：python3 backend/set-key.py " + provider;
+  field("key").textContent = message;
+  field("keycmd").textContent = "python3 backend/set-key.py " + provider;
 }
 
 function applyResult(result) {
