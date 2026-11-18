@@ -10,7 +10,10 @@ select,input:not([type=checkbox]){min-width:0;width:min(65%,245px);padding:6px 9
 input[type=checkbox]{appearance:none;position:relative;width:31px;height:18px;border-radius:12px;background:var(--muted);cursor:pointer}input[type=checkbox]::after{content:"";position:absolute;left:3px;top:3px;width:12px;height:12px;background:white;border-radius:50%}input[type=checkbox]:checked{background:#25855d}input[type=checkbox]:checked::after{left:16px}
 button{font:inherit;font-weight:550;padding:5px 14px;border:0;border-radius:8px;background:CanvasText;color:Canvas;cursor:pointer}
 .actions{display:flex;align-items:center;justify-content:space-between;gap:12px;padding-top:12px}#key,#status{color:var(--muted);font-size:13px}#status:empty{display:none}
-details{border-bottom:1px solid var(--line);padding:12px 0}summary{cursor:pointer;font-weight:550}pre{white-space:pre-wrap;overflow-wrap:anywhere;font:inherit}dt{font-weight:600;margin-top:7px}dd{margin:0}#keycmd{overflow-wrap:anywhere}
+details{border-bottom:1px solid var(--line);padding:12px 0}summary{cursor:pointer;font-weight:550}pre{white-space:pre-wrap;overflow-wrap:anywhere;font:inherit}dt{font-weight:600;margin-top:7px}dd{margin:0}
+.prompt-head{display:flex;align-items:center;justify-content:space-between;gap:12px;margin:14px 0 8px}
+#reset{background:transparent;color:var(--muted);font-size:13px;font-weight:450;padding:4px}
+#prompt{display:block;width:100%;min-height:6em;resize:vertical;padding:9px 11px;font:inherit;line-height:1.6;color:inherit;background:Canvas;border:1px solid var(--line);border-radius:7px}
 @media(max-width:360px){select,input:not([type=checkbox]){width:58%}form{padding-inline:12px}}
 </style>
 <main><header><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 48 48" fill="none" stroke="currentColor" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round">
@@ -28,8 +31,10 @@ details{border-bottom:1px solid var(--line);padding:12px 0}summary{cursor:pointe
 <fieldset id="editor" style="border:0;margin:0;padding:0"><label>服务商<select id="provider"><option value="go">OpenCode Go</option><option value="deepseek">DeepSeek</option><option value="custom">OpenAI 兼容服务</option></select></label>
 <section data-id="go"><label>模型<select id="go"><option>glm-5.3</option><option>glm-5.3-flash</option><option>deepseek-v4.1-flash</option></select></label></section>
 <section data-id="deepseek" hidden><label>模型<select id="deepseek"><option>deepseek-flash</option><option>deepseek-v4-pro</option></select></label></section>
-<section data-id="custom" hidden><label>API 根地址<input id="url" type="url" placeholder="https://api.example.com/v1"></label><label>模型 ID<input id="custom" spellcheck="false"></label></section></fieldset><div class="actions"><span id="key"></span><button>保存</button></div></fieldset></form>
-<p id="status" role="status">正在读取设置…</p><details><summary>密钥设置</summary><p>在项目目录运行 <code id="keycmd"></code>，再输入服务商密钥。</p></details><details><summary>固定提示词</summary><pre id="prompt"></pre></details>
+<section data-id="custom" hidden><label>API 根地址<input id="url" type="url" placeholder="https://api.example.com/v1"></label><label>模型 ID<input id="custom" spellcheck="false"></label></section><label>API 密钥<input id="secret" type="password" autocomplete="new-password" placeholder="留空保留当前密钥"></label></fieldset>
+<div class="prompt-head"><label for="prompt">沟通提示词</label><button type="button" id="reset">恢复默认</button></div>
+<textarea id="prompt" rows="3" maxlength="32000"></textarea><div class="actions"><span id="key"></span><button>保存</button></div></fieldset></form>
+<p id="status" role="status">正在读取设置…</p>
 <details><summary>每次调用传入的内容</summary><dl><dt>question · 问题</dt><dd>原问题中与本次沟通有关的部分。</dd>
 <dt>facts · 事实</dt><dd>需要传达的已核实事实列表。</dd><dt>uncertainties · 不确定项</dt><dd>尚未核实的信息、适用条件及待确认事项。</dd></dl></details></main>
 <script type="module">/* BUNDLE */</script></html>

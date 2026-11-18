@@ -2,6 +2,7 @@ import { access, mkdir, readFile, rename, rm, writeFile } from "node:fs/promises
 import { randomUUID } from "node:crypto";
 import { join } from "node:path";
 import { z } from "zod";
+import { panelPublicKey, unwrapCredential } from "./key-envelope.mjs";
 import { registerAppTool, registerAppResource, RESOURCE_MIME_TYPE } from "@modelcontextprotocol/ext-apps/server";
 import { customEndpoint, prompt, readSettings, settingsDir } from "./communicate.mjs";
 
@@ -14,11 +15,21 @@ export const panelIcons = await Promise.all(["light", "dark"].map(async theme =>
 const providers = ["go", "deepseek", "custom"];
 const defaults = { go: "glm-5.3", deepseek: "deepseek-flash", custom: "" };
 const modelsSchema = z.object({go:z.enum(["glm-5.3","glm-5.3-flash","deepseek-v4.1-flash"]),deepseek:z.enum(["deepseek-flash","deepseek-v4-pro"]),custom:z.string().max(200)}).strict();
-const input = {enabled:z.boolean(),provider:z.enum(providers),models:modelsSchema,customBaseUrl:z.string().max(2048)};
+const input = {enabled:z.boolean(),provider:z.enum(providers),models:modelsSchema,customBaseUrl:z.string().max(2048),
+  encryptedKey:z.object({wrappedKey:z.string().max(512),iv:z.string().max(24),ciphertext:z.string().max(5500)}).strict().optional(),
+  promptOverride:z.string().trim().min(1).max(32000).nullable().optional(),
+};
 const appOnly = {ui:{resourceUri:uri,visibility:["app"]}};
+async function atomicWrite(path, text) {
+  const temp = path + "." + randomUUID();
+  try {
+    await writeFile(temp, text, {mode:0o600, flag:"wx"});
+    await rename(temp, path);
+  } finally { await rm(temp, {force:true}); }
+}
 async function state() {
   const dir = settingsDir();
-  const {enabled, provider, models, customBaseUrl} = await readSettings(dir);
+  const {enabled, provider, models, customBaseUrl, promptOverride} = await readSettings(dir);
   const hasKey = {};
   for (const name of providers) {
     try { await access(join(dir, name+"-key")); hasKey[name]=true; }
@@ -26,7 +37,7 @@ async function state() {
   }
   const selected = Object.fromEntries(providers.map(name => [name, models?.[name] || defaults[name]]));
   if (selected.go === "off") selected.go = defaults.go;
-  return {enabled, provider, models:selected, customBaseUrl:customBaseUrl || "", hasKey, prompt};
+  return {enabled, provider, models:selected, customBaseUrl:customBaseUrl || "", hasKey, prompt:promptOverride || prompt, defaultPrompt:prompt, keyEncryptionJwk:await panelPublicKey(dir)};
 }
 const reply = async () => ({ content:[], structuredContent:await state() });
 export function registerPanel(server) {
@@ -49,7 +60,7 @@ export function registerPanel(server) {
   }, reply);
   registerAppTool(server,"set_panel_settings",{
     title:"保存沟通设置",inputSchema:input,annotations:{readOnlyHint:false,openWorldHint:false},_meta:appOnly,
-  }, async ({enabled, provider, models, customBaseUrl}) => {
+  }, async ({enabled, provider, models, customBaseUrl, encryptedKey, promptOverride}) => {
     const dir=settingsDir();
     const previous=await readSettings(dir);
     if (!enabled) {
@@ -60,13 +71,21 @@ export function registerPanel(server) {
     } else if (customBaseUrl) customEndpoint(customBaseUrl);
     if (enabled && provider==="custom" && (!customBaseUrl || !models.custom.trim())) throw new Error("请指定自定义地址与模型。");
     await mkdir(dir,{recursive:true,mode:0o700});
-    const target=join(dir,"communication-settings.json");
-    const tmp=target+"."+randomUUID();
-    try {
-      await writeFile(tmp,JSON.stringify({enabled,provider,models,customBaseUrl},null,2)+"\n",{mode:0o600,flag:"wx"});
-      if ((previous.customBaseUrl || "") !== customBaseUrl) await rm(join(dir,"custom-key"),{force:true});
-      await rename(tmp,target);
-    } finally { await rm(tmp,{force:true}); }
+    const nextPrompt = promptOverride === undefined ? previous.promptOverride : promptOverride;
+    const next = {enabled, provider, models, customBaseUrl};
+    if (nextPrompt) next.promptOverride = nextPrompt;
+
+    if (encryptedKey) {
+      if (!enabled) throw new Error("请启用并选择服务商后再保存新密钥。");
+      const origin = provider === "custom" ? customEndpoint(customBaseUrl).origin : "";
+      const key = await unwrapCredential(dir, encryptedKey, provider, origin);
+      const value = provider === "custom" ? JSON.stringify({origin, endpoint:customEndpoint(customBaseUrl).href, key}) : key;
+      await atomicWrite(join(dir, provider + "-key"), value + "\n");
+    }
+    if ((previous.customBaseUrl || "") !== customBaseUrl && !(provider === "custom" && encryptedKey)) {
+      await rm(join(dir, "custom-key"), {force:true});
+    }
+    await atomicWrite(join(dir, "communication-settings.json"), JSON.stringify(next, null, 2) + "\n");
     return reply();
   });
 }

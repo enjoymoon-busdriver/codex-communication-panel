@@ -3,6 +3,9 @@ node_modules/
 .env
 .env.*
 *-key
+*-key.*
+panel-private.pem
+panel-private.pem.*
 credentials/
 communication-settings.json
 communication-model

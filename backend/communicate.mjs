@@ -55,7 +55,7 @@ async function providerKey(dir, provider, endpoint) {
   if (!raw?.trim()) return ""; // Local compatible servers can operate without authentication.
   let credential;
   try { credential = JSON.parse(raw); } catch { throw new Error("自定义服务密钥格式无效。"); }
-  if (credential?.origin !== endpoint.origin || typeof credential.key !== "string") {
+  if (credential?.origin !== endpoint.origin || (credential.endpoint && credential.endpoint !== endpoint.href) || typeof credential.key !== "string") {
     throw new Error("此密钥与自定义服务地址不匹配，请重新保存密钥。");
   }
   return credential.key.trim();
@@ -68,7 +68,7 @@ export function settingsDir() {
 
 export async function communicate({ question, facts, uncertainties, thread_id }, meta = {}) {
   const dir = settingsDir();
-  const { enabled, provider, models, customBaseUrl } = await readSettings(dir);
+  const { enabled, provider, models, customBaseUrl, promptOverride } = await readSettings(dir);
   if (!enabled) return "沟通层已关闭，本次未发送请求。请由主控直接回复。";
   if (!["go", "deepseek", "custom"].includes(provider)) throw new Error("服务商设置无效。");
   const model = models?.[provider];
@@ -89,7 +89,7 @@ export async function communicate({ question, facts, uncertainties, thread_id },
   const res = await fetch(endpoint, {
     method: "POST", headers, redirect: "error", signal: AbortSignal.timeout(90000),
     body: JSON.stringify({ model, messages: [
-      { role: "system", content: prompt },
+      { role: "system", content: promptOverride || prompt },
       { role: "user", content: JSON.stringify({ question, facts, uncertainties }) },
     ] }),
   }).catch(error => {
