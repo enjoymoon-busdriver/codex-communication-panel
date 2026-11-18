@@ -1,0 +1,21 @@
+<!doctype html><html lang="zh-CN"><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<title>沟通模型</title>
+<style>
+:root{color-scheme:light dark;font:15px/1.6 Inter,-apple-system,BlinkMacSystemFont,"PingFang SC",sans-serif}
+*{box-sizing:border-box}body{max-width:42rem;margin:0 auto;padding:clamp(20px,5vw,44px)}
+h1{font-size:1.5rem;line-height:1.25;margin:0}header{display:flex;align-items:center;justify-content:space-between;margin:0 0 1.4rem}
+label{display:block;font-size:.92rem;font-weight:550;margin-bottom:12px}header label{margin:0;font-weight:400}
+input:not([type=checkbox]),select{display:block;width:100%;padding:8px 10px;margin-top:4px;border:1px solid color-mix(in srgb,CanvasText 26%,transparent);border-radius:7px;background:Canvas;color:CanvasText;font:inherit}
+input[type=checkbox]{accent-color:#306cac}button{font:inherit;border:0;cursor:pointer;border-radius:8px;padding:6px 18px;color:white;background:#305e96}
+details{border-top:1px solid color-mix(in srgb,CanvasText 18%,transparent);padding:12px 0}form{margin-bottom:18px}
+summary{font-weight:550;cursor:pointer}pre{white-space:pre-wrap;overflow-wrap:anywhere;font:inherit}dt{font-weight:600;margin-top:7px}dd{margin:0}p[role=status]{font-size:.9rem}
+</style>
+<main><form id="settings"><fieldset id="controls" disabled style="border:0;margin:0;padding:0"><header><h1>沟通模型</h1><label><input id="enabled" type="checkbox"> 启用外部沟通</label></header>
+<fieldset id="editor" style="border:0;margin:0;padding:0"><label>服务商<select id="provider"><option value="go">OpenCode Go</option><option value="deepseek">DeepSeek</option><option value="custom">OpenAI 兼容服务</option></select></label>
+<section data-id="go"><label>模型<select id="go"><option>glm-5.3</option><option>glm-5.3-flash</option><option>deepseek-v4.1-flash</option></select></label></section>
+<section data-id="deepseek" hidden><label>模型<select id="deepseek"><option>deepseek-flash</option><option>deepseek-v4-pro</option></select></label></section>
+<section data-id="custom" hidden><label>API 根地址<input id="url" type="url" placeholder="https://api.example.com/v1"></label><label>模型 ID<input id="custom" spellcheck="false"></label></section><p id="key"></p></fieldset><button>保存</button></fieldset></form>
+<p id="status" role="status">正在读取设置…</p><details><summary>固定提示词</summary><pre id="prompt"></pre></details>
+<details><summary>每次调用传入的内容</summary><dl><dt>question · 问题</dt><dd>原问题中与本次沟通有关的部分。</dd>
+<dt>facts · 事实</dt><dd>需要传达的已核实事实列表。</dd><dt>uncertainties · 不确定项</dt><dd>尚未核实的信息、适用条件及待确认事项。</dd></dl></details></main>
+<script type="module">/* BUNDLE */</script></html>

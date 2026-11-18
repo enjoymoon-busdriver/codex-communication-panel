@@ -1,0 +1,17 @@
+{
+  "$schema": "https://agent-plugins.org/schemas/1.0.0/plugin.schema.json",
+  "name": "codex-communication-panel",
+  "version": "0.1.0",
+  "description": "选择独立沟通模型，保留主会话的任务模型。",
+  "license": "MIT",
+  "extensions": {
+    "com.openai": {
+      "requires_local_executor": true,
+      "interface": {
+        "displayName": "沟通模型",
+        "shortDescription": "设置工作回复的沟通模型",
+        "category": "Productivity"
+      }
+    }
+  }
+}
