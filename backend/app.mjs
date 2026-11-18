@@ -6,10 +6,10 @@ import { communicate } from "./communicate.mjs";
 export function createServer() {
   const server = new McpServer({ name: "forge-communication", title:"传声筒", icons:panelIcons, version: "0.1.0" });
   server.registerTool("compose_reply", {
-    description: "为主会话拟一条面向用户的工作回复。只使用与答复有关的问题、已核实事实和待确认点。",
+    description: "为主会话拟一条面向用户的工作回复。传入用户当次原话和少量相关背景，不附完整聊天或主控草稿。",
     inputSchema: {
-      question: z.string().min(1).describe("用户原问题的必要部分，去除无关私人信息"),
-      facts: z.array(z.string()).describe("已经核实、需要传达的事实"),
+      question: z.string().min(1).describe("用户当次消息的原话，保留措辞和语气，遵循项目隐私范围"),
+      facts: z.array(z.string()).describe("帮助理解原话的简短背景或已核实进展，可空"),
       uncertainties: z.array(z.string()).describe("未核实、需保留的条件和待确认点，可空"),
       thread_id: z.string().optional().describe("当前 Codex 主聊天的真实 UUID（可从 CODEX_THREAD_ID 取得），不可自行生成。"),
     },
