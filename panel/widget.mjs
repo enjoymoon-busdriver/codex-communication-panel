@@ -56,14 +56,6 @@ function report(error) {
   field("status").textContent = error.message || "读取或保存设置失败。";
 }
 
-app.ontoolresult = result => {
-  try {
-    applyResult(result);
-    field("status").textContent = "";
-  } catch (error) {
-    report(error);
-  }
-};
 field("enabled").addEventListener("change", updateEditor);
 field("provider").addEventListener("change", () => {field("secret").value = "";updateEditor();});
 field("url").addEventListener("input", () => {field("secret").value = "";});
@@ -107,11 +99,11 @@ field("settings").addEventListener("submit", async event => {
 
 try {
   await app.connect();
-  if (!saved) {
-    const result = await app.callServerTool({ name: "get_panel_settings", arguments: {} });
-    if (!saved) applyResult(result);
-    field("status").textContent = "";
-  }
+  // The sidebar can replay an old opening result after a plugin update.
+  // Read current settings once per mount, before enabling the editors.
+  const result = await app.callServerTool({ name: "get_panel_settings", arguments: {} });
+  applyResult(result);
+  field("status").textContent = "";
 } catch (error) {
   report(error);
 }
